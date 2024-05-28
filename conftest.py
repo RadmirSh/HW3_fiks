@@ -1,5 +1,5 @@
 import pytest
-from checkers import checkout, getout
+from checkers import check_positive_output, get_output
 import random, string
 import yaml
 from datetime import datetime
@@ -10,26 +10,26 @@ with open('config.yaml') as f:
 
 @pytest.fixture()
 def make_folders():
-    return checkout(
-        f"mkdir -p {data['folder_in']} {data['folder_out']} {data['folder_ext']} {data['folder_ext2']}",
+    return check_positive_output(
+        f"mkdir -p {data['input_path']} {data['output_path']} {data['external_path']} {data['external_path2']}",
         "")
 
 
 @pytest.fixture()
 def make_files():
     list_of_files = []
-    for i in range(data['count']):
+    for i in range(data['file_count']):
         filename = ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
-        if checkout(f"cd {data['folder_in']}; "
-                    f"dd if=/dev/urandom of={filename} bs={data['bs']} count=1 iflag=fullblock", ''):
+        if check_positive_output(f"cd {data['input_path']}; "
+                                 f"dd if=/dev/urandom of={filename} bs={data['block_size']} count=1 iflag=fullblock", ''):
             list_of_files.append(filename)
     return list_of_files
 
 
 @pytest.fixture()
 def clear_folders():
-    return checkout(
-        f"rm -rf {data['folder_in']}/* {data['folder_out']}/* {data['folder_ext']}/* {data['folder_ext2']}/*",
+    return check_positive_output(
+        f"rm -rf {data['input_path']}/* {data['output_path']}/* {data['external_path']}/* {data['external_path2']}/*",
         "")
 
 
@@ -37,19 +37,19 @@ def clear_folders():
 def make_sub_folder():
     testfilename = ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
     subfoldername = ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
-    if not checkout(f"cd {data['folder_in']}; mkdir {subfoldername} ", ''):
+    if not check_positive_output(f"cd {data['input_path']}; mkdir {subfoldername} ", ''):
         return None, None
-    if not checkout(f"cd {data['folder_in']}/{subfoldername};"
-                    f" dd if=/dev/urandom of={testfilename} bs={data['bs']} count=1 iflag=fullblock", ''):
+    if not check_positive_output(f"cd {data['input_path']}/{subfoldername};"
+                                 f" dd if=/dev/urandom of={testfilename} bs={data['block_size']} count=1 iflag=fullblock", ''):
         return subfoldername, None
     return subfoldername, testfilename
 
 
 @pytest.fixture()
 def make_bad_arx():
-    checkout(f"cd {data['folder_in']}; 7z a -t{data['arc_type']}{data['folder_out']}/bad_arx",
-             "Everything is Ok")
-    checkout(f"truncate -s 1 {data['folder_out']}/bad_arx.{data['arc_type']}", "")
+    check_positive_output(f"cd {data['input_path']}; 7z a -t{data['archive_type']}{data['output_path']}/bad_arx",
+                          "Everything is Ok")
+    check_positive_output(f"truncate -s 1 {data['output_path']}/bad_arx.{data['archive_type']}", "")
 
 
 @pytest.fixture(autouse=True)
@@ -63,5 +63,5 @@ def print_time():
 def stat_log():
     yield
     time = datetime.now().strftime("%H:%M:%s.%f")
-    stat = getout('cat /proc/loadavg')
-    checkout(f"echo 'time:{time} count:{data['count']} size;{data['bs']} stat:{stat}' >> stat.txt", '')
+    stat = get_output('cat /proc/loadavg')
+    check_positive_output(f"echo 'time:{time} count:{data['file_count']} size;{data['block_size']} stat:{stat}' >> stat.txt", '')
