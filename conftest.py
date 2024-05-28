@@ -1,5 +1,5 @@
 import pytest
-from checkers import check_positive_output, get_output
+from checks import check_positive_output, get_output
 import random, string
 import yaml
 from datetime import datetime
