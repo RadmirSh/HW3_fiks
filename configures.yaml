@@ -1,0 +1,8 @@
+input_folder: /home/user/tst
+output_folder: /home/user/out
+external_folder: /home/user/f1
+external_folder2: /home/user/f2
+file_count: 5
+block_size: 1M
+file_type: zip
+archive_type: zip
